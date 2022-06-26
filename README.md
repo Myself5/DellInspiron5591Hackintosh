@@ -1,6 +1,6 @@
 
-# Dell Inspiron 5767 Hackintosh (OpenCore)
-macOS on Dell Inspiron 5767 (i7-7500u)
+# Dell Latitude 5591 Hackintosh (OpenCore)
+macOS on Dell Latitude 5591 (i5-8400H)
 
 ![OpenCore Version](https://img.shields.io/badge/opencore-v0.8.0-blue)
 
@@ -25,7 +25,7 @@ If you are upgrading from OpenCore v0.6.2 you **MUST replace the whole OC folder
 5. Internet connection (obviously :stuck_out_tongue_winking_eye:)
 
 ### BIOS setup
-1. Make sure your BIOS is up to date. If not install latest from Dell site
+1. Make sure your BIOS is up to date. If not install latest from Dell sitee
 2. Reboot to BIOS Setup
 3. Enable Boot from USB and Legacy boot
 4. Disable Fast boot and Secure boot
@@ -38,7 +38,7 @@ Just follow official OpenCore guide here: [Creating the USB](https://dortania.gi
 ### EFI Installation
 1. Clone this repository
 2. Run build.sh from terminal (if using WSL on Windows first install `dos2unix` and run `dos2unix build.sh` to convert the script to unix format)
-3. Open `Out/EFI/OC/config.plist` and follow [this guide](https://dortania.github.io/OpenCore-Install-Guide/config-laptop.plist/kaby-lake.html#platforminfo) to correctly fill `"PlatformInfo">"Generic"` empty fields (**Do not change `"SystemProductName"` value, just use the given one**)
+3. Open `Out/EFI/OC/config.plist` and follow [this guide](https://dortania.github.io/OpenCore-Install-Guide/config-laptop.plist/coffee-lake.html#platforminfo) to correctly fill `"PlatformInfo">"Generic"` empty fields (**Do not change `"SystemProductName"` value, just use the given one**)
 4. Run `build.sh` script and wait while it prepares the *EFI* folder for you (it may takes long depending on you internet connection quality)
 5. Then copy entire *EFI* folder to your USB flash drive EFI partition you created previously. It should look like the following
 
@@ -79,14 +79,13 @@ Just follow official OpenCore guide here: [Creating the USB](https://dortania.gi
 
 | ACPI file | Description |
 | --- | --- |
-| SSDT-dGPU-OFF.aml | Disables AMD Radeon M445 |
+| SSDT-AWAC | Fix System Clocks |
+| SSDT-BRT6 | Fixing the brightness keys |
 | SSDT-EC-USBX | Adds missing EC controller and inject USB power properties |
-| SSDT-GPRW | Needed by DSDT |
 | SSDT-PLUG | Injects plugin-type to fix Native Power Management |
 | SSDT-PNLF | Injects backlight properties to fix backlight control |
 | SSDT-PTWK | Fixes screen wake |
 | SSDT-SBUS-MCHC | Fixes Serial BUS for correct sensors management and adds missing MCHC device |
-| SSDT-WIN7 | Bypasses OS version checks|
 | SSDT-WKSC | Wakes our screen up on waking |
 | SSDT-XOSI | Patches _OSI to XOSI |
 
@@ -94,30 +93,23 @@ Just follow official OpenCore guide here: [Creating the USB](https://dortania.gi
 
 | Kext file | Description |
 | --- | --- |
-| AirportItlwm | Fixes WiFi |
+| AlpsHID | Touchpad + Trackpoint support |
 | AppleALC | Fixes onboard audio |
 | BlueToolFixup | Support kext for IntelBluetoothFirmware |
-| BrightnessKeys | Fixes brightness function keys |
-| CPUFriend | Fixes CPU power management |
-| CPUFriendDataProvider | CPU power/performance profile |
-| DebugEnhancer | Enhance debugging output |
-| HibernationFixup | Enables hibernation features [<sup>(1)</sup>](##Notes)
 | IntelBluetoothFirmware | Fixes Bluetooth |
+| IntelMausi | Intel LAN drivers |
+| itlwm | OpenSource WiFi Drivers from OpenIntelWireless. Needs [HeliPort](https://github.com/OpenIntelWireless/HeliPort) for configuration |
 | Lilu | Fixes lot of things and make laptop boot |
 | RealtekCardReader | Enables SD card reader support |
 | RealtekCardReaderFriend | SD card reader support data |
-| RealtekRTL8100 | Fixes ethernet |
 | SMCBatteryManager | Fixes battery percentage |
 | SMCDellSensors | Enhance sensors support like thermal sensors |
-| USBMap | Correctly maps USB ports and their types |
+| USBMap | Correctly maps USB ports and their types **WARNING**: the left USB port is unmapped, as mine is broken. Use https://github.com/corpnewt/USBMap to properly map yours. |
 | VirtualSMC | Fakes our laptop as MacBook making it boot |
 | VoodooI2C | Fixes trackpad |
 | VoodooI2CHID | VoodooI2C plugin for Precision Trackpad |
 | VoodooPS2Controller | Fixes keyboard |
 | WhateverGreen | Fixes Intel HD Graphics and other graphics stuffs |
-
-## Notes
-(1) Hibernation is under experimental phase and it's being tested continuously. For now it seems to work correctly and hibernation cycles are very close to the ones of a native MacBook Pro.  
 
 ## Troubleshooting
 To get help just open a issue or visit hackintosh sites on the web:
@@ -137,3 +129,4 @@ and others
 - [@RehabMan](https://github.com/RehabMan) for his crucial role in the hackintosh world. That will never be forgotten since most of the projects above are based on his work.
 - [@OpenIntelWireless](https://github.com/OpenIntelWireless) for their work on Intel Wi-Fi cards (no anyone else wanted to work on this in the past so he's doing something deemed by all impossible)
 - [@0xFireWolf](https://github.com/0xFireWolf) for his work on Realtek card reader driver (finally someone is working on it)
+- [@arch-dev](https://github.com/arch-dev/) for his Inspiron 5767 repo this is based on

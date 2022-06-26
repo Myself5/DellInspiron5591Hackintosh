@@ -34,31 +34,48 @@ function download()
  FILE=$2
  while IFS= read -r line; do
   link=$(echo $line | cut -d ',' -f 1)
-  name=$(echo $line | cut -d ',' -f 2)
-  version=$(curl -Ls -o /dev/null -w %{url_effective} $link/latest | grep -o 'tag/[v.0-9]*' | awk -F/ '{print $2}')
+  files=$(echo $line | cut -d ',' -f 3)
+  version=$(curl -Ls -o /dev/null -w %{url_effective} $(echo $link | sed s/download.*/latest/g) | grep -o 'tag/[v.0-9]*' | awk -F/ '{print $2}' | sed 's/^v\(.*\)/\1/')
+  name=$(echo $line | cut -d ',' -f 2 | sed s/##VERSION##/$version/g)
+  name_current=$(echo $line | cut -d ',' -f 2 | sed s/##VERSION##/current/g)
+  
   echo Downloading $name version: $version...
-  if [[ $(echo $link | cut -d '/' -f 4) == "acidanthera" && $(echo $link | cut -d '/' -f 6) == "releases" ]]; then
-   curl -L $link/download/$version/$name-$version-RELEASE.zip > $DIR/$name.zip &
-  elif [[ $(echo $link | cut -d '/' -f 5) == "itlwm" && $(echo $link | cut -d '/' -f 6) == "releases" ]]; then
-   curl -L $link/download/$version/$name\_$version\_stable_Monterey.kext.zip > $DIR/$name.zip &
-  elif [[ $(echo $link | cut -d '/' -f 5) == "IntelBluetoothFirmware" && $(echo $link | cut -d '/' -f 6) == "releases" ]]; then
-   curl -L $link/download/$version/$name-$version.zip > $DIR/$name.zip &
-  elif [[ $(echo $link | cut -d '/' -f 4) == "0xFireWolf" && $(echo $link | cut -d '/' -f 6) == "releases" ]]; then
-   curl -L $link/download/$version/$name\_${version:1:5}\_b998818_RELEASE.zip > $DIR/$name.zip &
-  elif [[ $(echo $link | cut -d '/' -f 6) == "releases" ]]; then
-   curl -L $link/download/$version/$name-$version.zip > $DIR/$name.zip &
+  if [[ $(echo $link | cut -d '/' -f 6) == "releases" ]]; then
+   curl -L $link$version/$name.zip > $DIR/$name_current.zip &
   elif [[ $(echo $link | cut -d '/' -f 6) == "archive" ]]; then
-   curl -L $link/master.zip > $DIR/$name.zip &
+   curl -L $link/master.zip > $DIR/$name_current.zip &
   fi
   until [[ -z `jobs|grep -E -v 'Done|Terminated'` ]]; do
    sleep 0.05; echo -n '.'
   done
   echo Extracting $name...
-  unzip -o $DIR/$name.zip -d $DIR/$name
+  unzip -o $DIR/$name_current.zip -d $DIR/$name_current
   until [[ -z `jobs|grep -E -v 'Done|Terminated'` ]]; do
    sleep 0.05; echo -n '.'
   done
  done <$FILE
+}
+
+function processKexts()
+{
+ DIR=$1
+ OUT=$2
+ FILE=$3
+ while IFS= read -r line; do
+  link=$(echo $line | cut -d ',' -f 1)
+  files=$(echo $line | cut -d ',' -f 3 | sed s/#/\ /g)
+  name=$(echo $line | cut -d ',' -f 2 | sed s/##VERSION##/current/g)
+  for file in ${files}
+  do
+   echo Copying $file...
+   find $DIR/$name -name $file -exec cp -R {} $OUT \;
+   until [[ -z `jobs|grep -E -v 'Done|Terminated'` ]]; do
+     sleep 0.05; echo -n '.'
+   done
+  done
+ done <$FILE
+ echo Copying prebuilt Kexts...
+ cp -R Prebuilt/*.kext $OUT
 }
 
 function clean()
@@ -77,32 +94,7 @@ download $TEMP "Dependencies/packages.txt"
 mkdir $TOOLS
 download $TOOLS "Dependencies/tools.txt"
 echo Copying files to EFI...
-find $TEMP -name \*.kext -exec cp -R {} $OUTDIR/EFI/OC/Kexts \;
-rm -rf $OUTDIR/EFI/OC/Kexts/AppleALCU.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/BrcmBluetoothInjector.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/BrcmBluetoothInjectorLegacy.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/BrcmFirmwareData.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/BrcmFirmwareRepo.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/BrcmNonPatchRAM.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/BrcmNonPatchRAM2.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/BrcmPatchRAM.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/BrcmPatchRAM2.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/BrcmPatchRAM3.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/IntelBluetoothInjector.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/SMCLightSensor.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/SMCProcessor.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/SMCSuperIO.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/VoodooInput.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/VoodooGPIO.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/VoodooI2CServices.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/VoodooI2CAtmelMXT.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/VoodooI2CELAN.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/VoodooI2CFTE.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/VoodooI2CSynaptics.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/VoodooPS2Keyboard.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/VoodooPS2Mouse.kext
-rm -rf $OUTDIR/EFI/OC/Kexts/VoodooPS2Trackpad.kext
-cp -R Prebuilt/*.kext $OUTDIR/EFI/OC/Kexts
+processKexts $TEMP $OUTDIR/EFI/OC/Kexts "Dependencies/packages.txt"
 while IFS= read -r line; do
  cp $TEMP/$(echo $line | cut -d ',' -f 1) $OUTDIR/$(echo $line | cut -d ',' -f 2)
 done <"Dependencies/efi.txt"
